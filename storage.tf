@@ -1,5 +1,31 @@
 provider "azurerm" {
   features {}
+
+  subscription_id = var.subscription_id
+  tenant_id       = var.tenant_id
+  client_id       = var.client_id
+  client_secret   = var.client_secret
+}
+
+# Variables for authentication
+variable "subscription_id" {
+  description = "Azure Subscription ID"
+  type        = string
+}
+
+variable "tenant_id" {
+  description = "Azure Tenant ID"
+  type        = string
+}
+
+variable "client_id" {
+  description = "Azure Client ID"
+  type        = string
+}
+
+variable "client_secret" {
+  description = "Azure Client Secret"
+  type        = string
 }
 
 # Resource group
@@ -26,21 +52,21 @@ resource "azurerm_storage_container" "example" {
 
 # Outputs
 output "storage_account_name" {
-  value = azurerm_storage_account.example.name
+  value       = azurerm_storage_account.example.name
   description = "The name of the Storage Account"
 }
 
 output "storage_account_id" {
-  value = azurerm_storage_account.example.id
+  value       = azurerm_storage_account.example.id
   description = "The ID of the Storage Account"
 }
 
 output "storage_container_name" {
-  value = azurerm_storage_container.example.name
+  value       = azurerm_storage_container.example.name
   description = "The name of the Storage Container"
 }
 
 output "resource_group_name" {
-  value = azurerm_resource_group.example.name
+  value       = azurerm_resource_group.example.name
   description = "The name of the Resource Group"
 }
