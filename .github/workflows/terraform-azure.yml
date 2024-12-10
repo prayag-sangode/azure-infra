@@ -1,0 +1,44 @@
+name: Terraform Deployment
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    name: Deploy Terraform Resources
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Setup Terraform (default version)
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      # Configure Azure Authentication
+      - name: Authenticate to Azure
+        run: |
+          echo "Setting up Azure credentials..."
+          export ARM_CLIENT_ID=${{ secrets.ARM_CLIENT_ID }}
+          export ARM_CLIENT_SECRET=${{ secrets.ARM_CLIENT_SECRET }}
+          export ARM_SUBSCRIPTION_ID=${{ secrets.ARM_SUBSCRIPTION_ID }}
+          export ARM_TENANT_ID=${{ secrets.ARM_TENANT_ID }}
+
+      # Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
+
+      # Terraform Plan
+      - name: Terraform Plan
+        run: terraform plan
+
+      # Terraform Apply
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
