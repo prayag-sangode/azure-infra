@@ -1,6 +1,6 @@
 # New Resource Group
 resource "azurerm_resource_group" "juice_shop_new_rg" {
-  name     = "juice-shop-neww-rg"  # New Resource Group Name
+  name     = "juice-shop-newww-rg"  # New Resource Group Name
   location = "East US"            # Location for the resource group
 }
 
