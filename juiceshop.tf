@@ -88,8 +88,8 @@ variable "container_name_prefix" {
 
 variable "image" {
   type        = string
-  default     = "nginx"  # Using the NGINX public image
-  description = "Container image to deploy."
+  default     = "mcr.microsoft.com/azuredocs/aci-helloworld"
+  description = "Container image to deploy. Should be of the form repoName/imagename:tag for images stored in public Docker Hub, or a fully qualified URI for other registries. Images from private registries require additional registry credentials."
 }
 
 variable "port" {
