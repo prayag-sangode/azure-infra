@@ -86,9 +86,10 @@ variable "container_name_prefix" {
   description = "Prefix of the container name that's combined with a random value so name is unique in your Azure subscription."
 }
 
+# Update the container image to use Juiceshop
 variable "image" {
   type        = string
-  default     = "mcr.microsoft.com/azuredocs/aci-helloworld"
+  default     = "bkimminich/juice-shop"  # Updated image for Juiceshop
   description = "Container image to deploy. Should be of the form repoName/imagename:tag for images stored in public Docker Hub, or a fully qualified URI for other registries. Images from private registries require additional registry credentials."
 }
 
