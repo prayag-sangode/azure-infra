@@ -1,72 +1,81 @@
-#provider "azurerm" {
-#  features {}
-#
-#  subscription_id = var.subscription_id
-#  tenant_id       = var.tenant_id
-#  client_id       = var.client_id
-#  client_secret   = var.client_secret
-#}
+provider "azurerm" {
+  features {}
 
-# Variables for authentication
-variable "subscription_id" {
-  description = "Azure Subscription ID"
-  type        = string
+  subscription_id = var.subscription_id
+  tenant_id       = var.tenant_id
+  client_id       = var.client_id
+  client_secret   = var.client_secret
 }
 
-variable "tenant_id" {
-  description = "Azure Tenant ID"
-  type        = string
+# New Resource Group
+resource "azurerm_resource_group" "juice_shop_new_rg" {
+  name     = "juice-shop-new-rg"  # New Resource Group Name
+  location = "East US"            # Location for the resource group
 }
 
-variable "client_id" {
-  description = "Azure Client ID"
-  type        = string
+# Virtual Network
+resource "azurerm_virtual_network" "juice_shop_vnet" {
+  name                = "juice-shop-vnet"
+  location            = azurerm_resource_group.juice_shop_new_rg.location
+  resource_group_name = azurerm_resource_group.juice_shop_new_rg.name
+  address_space       = ["10.0.0.0/16"]
 }
 
-variable "client_secret" {
-  description = "Azure Client Secret"
-  type        = string
+# Subnet
+resource "azurerm_subnet" "juice_shop_subnet" {
+  name                 = "juice-shop-subnet"
+  resource_group_name  = azurerm_resource_group.juice_shop_new_rg.name
+  virtual_network_name = azurerm_virtual_network.juice_shop_vnet.name
+  address_prefixes     = ["10.0.1.0/24"]
 }
 
-# Resource group
-resource "azurerm_resource_group" "example" {
-  name     = "example-resources"
-  location = "East US"
+# Network Interface (for container group)
+resource "azurerm_network_interface" "juice_shop_nic" {
+  name                = "juice-shop-nic"
+  location            = azurerm_resource_group.juice_shop_new_rg.location
+  resource_group_name = azurerm_resource_group.juice_shop_new_rg.name
+
+  ip_configuration {
+    name                          = "internal"
+    subnet_id                     = azurerm_subnet.juice_shop_subnet.id
+    private_ip_address_allocation = "Static"
+    private_ip_address            = "10.0.1.4"  # Static private IP for the container
+  }
 }
 
-# Storage account
-resource "azurerm_storage_account" "example" {
-  name                     = "myuniqnamestrg19159" # Must be globally unique
-  resource_group_name      = azurerm_resource_group.example.name
-  location                 = azurerm_resource_group.example.location
-  account_tier             = "Standard"
-  account_replication_type = "LRS"
-}
+# Container Group (with no public IP)
+resource "azurerm_container_group" "juice_shop_container" {
+  name                = "juice-shop-container"
+  location            = azurerm_resource_group.juice_shop_new_rg.location
+  resource_group_name = azurerm_resource_group.juice_shop_new_rg.name
+  os_type             = "Linux"
+  tags                = {
+    environment = "production"
+  }
 
-# Storage container (bucket equivalent)
-resource "azurerm_storage_container" "example" {
-  name                  = "example-container"
-  storage_account_id    = azurerm_storage_account.example.id
-  container_access_type = "private"
-}
+  container {
+    name   = "juice-shop"
+    image  = "bkimminich/juice-shop:v15.0.0"
+    cpu    = "1"
+    memory = "2"
+    environment_variables = {
+      NODE_ENV = "production"
+    }
 
-# Outputs
-output "storage_account_name" {
-  value       = azurerm_storage_account.example.name
-  description = "The name of the Storage Account"
-}
+    ports {
+      port     = 3000
+      protocol = "TCP"
+    }
+  }
 
-output "storage_account_id" {
-  value       = azurerm_storage_account.example.id
-  description = "The ID of the Storage Account"
-}
-
-output "storage_container_name" {
-  value       = azurerm_storage_container.example.name
-  description = "The name of the Storage Container"
+  # Subnet to use internal IP
+  subnet_ids = [azurerm_subnet.juice_shop_subnet.id]
 }
 
 output "resource_group_name" {
-  value       = azurerm_resource_group.example.name
-  description = "The name of the Resource Group"
+  value = azurerm_resource_group.juice_shop_new_rg.name
+}
+
+output "container_group_name" {
+  value = azurerm_container_group.juice_shop_container.name
 }
