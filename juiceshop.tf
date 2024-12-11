@@ -140,14 +140,6 @@ resource "azurerm_public_ip" "public_ip" {
   sku                 = "Basic"
 }
 
-resource "azurerm_public_ip" "public_ip" {
-  name                = "juice-shop-public-ip"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Static"
-  sku                 = "Basic"
-}
-
 output "public_ip_address" {
   value = azurerm_public_ip.public_ip.ip_address
 }
