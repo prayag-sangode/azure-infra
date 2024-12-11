@@ -1,7 +1,12 @@
 # Provider Configuration
-#provider "azurerm" {
-#  features {}
-#}
+provider "azurerm" {
+  features {}
+
+  subscription_id = var.subscription_id
+  tenant_id       = var.tenant_id
+  client_id       = var.client_id
+  client_secret   = var.client_secret
+}
 
 # 1. Resource Group
 resource "azurerm_resource_group" "juice_shop_rg" {
@@ -63,5 +68,6 @@ resource "azurerm_container_group" "juice_shop_container" {
     }
   }
 
-  network_profile_id = azurerm_network_interface.juice_shop_nic.id
+  # Corrected usage of subnet_ids instead of network_profile_id
+  subnet_ids = [azurerm_subnet.juice_shop_subnet.id]
 }
