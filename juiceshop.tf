@@ -1,3 +1,4 @@
+# Resource Group
 resource "random_pet" "rg_name" {
   prefix = var.resource_group_name_prefix
 }
@@ -7,6 +8,7 @@ resource "azurerm_resource_group" "rg" {
   location = var.resource_group_location
 }
 
+# Virtual Network and Subnet with Delegation
 resource "azurerm_virtual_network" "vnet" {
   name                = "vnet-${random_pet.rg_name.id}"
   location            = azurerm_resource_group.rg.location
@@ -19,17 +21,17 @@ resource "azurerm_subnet" "subnet" {
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.1.0/24"]
+
   delegation {
     name = "aci-delegation"
     service_delegation {
-      name = "Microsoft.ContainerInstance/containerGroups"
-      actions = [
-        "Microsoft.Network/virtualNetworks/subnets/action",
-      ]
+      name    = "Microsoft.ContainerInstance/containerGroups"
+      actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
     }
   }
 }
 
+# Container Group
 resource "random_string" "container_name" {
   length  = 25
   lower   = true
@@ -43,7 +45,8 @@ resource "azurerm_container_group" "container" {
   resource_group_name = azurerm_resource_group.rg.name
   os_type             = "Linux"
   restart_policy      = var.restart_policy
-  subnet_ids          = [azurerm_subnet.subnet.id] # Use the subnet ID directly here
+  subnet_ids          = [azurerm_subnet.subnet.id]  # Subnet for private IP
+  ip_address_type     = "Private"                  # Must use private IP for subnet
 
   container {
     name   = "${var.container_name_prefix}-${random_string.container_name.result}"
@@ -58,6 +61,7 @@ resource "azurerm_container_group" "container" {
   }
 }
 
+# Variables
 variable "resource_group_location" {
   type        = string
   default     = "eastus"
@@ -67,25 +71,25 @@ variable "resource_group_location" {
 variable "resource_group_name_prefix" {
   type        = string
   default     = "rg"
-  description = "Prefix for the resource group name."
+  description = "Prefix of the resource group name that's combined with a random value so name is unique in your Azure subscription."
 }
 
 variable "container_group_name_prefix" {
   type        = string
   default     = "acigroup"
-  description = "Prefix for the container group name."
+  description = "Prefix of the container group name that's combined with a random value so name is unique in your Azure subscription."
 }
 
 variable "container_name_prefix" {
   type        = string
   default     = "aci"
-  description = "Prefix for the container name."
+  description = "Prefix of the container name that's combined with a random value so name is unique in your Azure subscription."
 }
 
 variable "image" {
   type        = string
   default     = "mcr.microsoft.com/azuredocs/aci-helloworld"
-  description = "Container image to deploy."
+  description = "Container image to deploy. Should be of the form repoName/imagename:tag for images stored in public Docker Hub, or a fully qualified URI for other registries. Images from private registries require additional registry credentials."
 }
 
 variable "port" {
@@ -97,25 +101,26 @@ variable "port" {
 variable "cpu_cores" {
   type        = number
   default     = 1
-  description = "CPU cores to allocate to the container."
+  description = "The number of CPU cores to allocate to the container."
 }
 
 variable "memory_in_gb" {
   type        = number
   default     = 2
-  description = "Memory to allocate to the container (in GB)."
+  description = "The amount of memory to allocate to the container in gigabytes."
 }
 
 variable "restart_policy" {
   type        = string
   default     = "Always"
-  description = "Container restart policy."
+  description = "The behavior of Azure runtime if container has stopped."
   validation {
     condition     = contains(["Always", "Never", "OnFailure"], var.restart_policy)
-    error_message = "Restart policy must be one of: Always, Never, OnFailure."
+    error_message = "The restart_policy must be one of the following: Always, Never, OnFailure."
   }
 }
 
+# Outputs
 output "container_ipv4_address" {
   value = azurerm_container_group.container.ip_address
 }
