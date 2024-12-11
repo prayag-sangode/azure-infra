@@ -10,7 +10,7 @@ provider "azurerm" {
 
 # 1. Resource Group
 resource "azurerm_resource_group" "juice_shop_rg" {
-  name     = "juice-shop-rg"
+  name     = "juice-shop-rg-new"
   location = "East US"
 }
 
