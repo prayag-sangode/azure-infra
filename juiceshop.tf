@@ -1,72 +1,99 @@
-# New Resource Group
-resource "azurerm_resource_group" "juice_shop_new_rg" {
-  name     = "juice-shop-newww-rg"  # New Resource Group Name
-  location = "East US"            # Location for the resource group
+resource "random_pet" "rg_name" {
+  prefix = var.resource_group_name_prefix
 }
 
-# Virtual Network
-resource "azurerm_virtual_network" "juice_shop_vnet" {
-  name                = "juice-shop-vnet"
-  location            = azurerm_resource_group.juice_shop_new_rg.location
-  resource_group_name = azurerm_resource_group.juice_shop_new_rg.name
-  address_space       = ["10.0.0.0/16"]
+resource "azurerm_resource_group" "rg" {
+  name     = random_pet.rg_name.id
+  location = var.resource_group_location
 }
 
-# Subnet
-resource "azurerm_subnet" "juice_shop_subnet" {
-  name                 = "juice-shop-subnet"
-  resource_group_name  = azurerm_resource_group.juice_shop_new_rg.name
-  virtual_network_name = azurerm_virtual_network.juice_shop_vnet.name
-  address_prefixes     = ["10.0.1.0/24"]
+resource "random_string" "container_name" {
+  length  = 25
+  lower   = true
+  upper   = false
+  special = false
 }
 
-# Network Interface (for container group)
-resource "azurerm_network_interface" "juice_shop_nic" {
-  name                = "juice-shop-nic"
-  location            = azurerm_resource_group.juice_shop_new_rg.location
-  resource_group_name = azurerm_resource_group.juice_shop_new_rg.name
-
-  ip_configuration {
-    name                          = "internal"
-    subnet_id                     = azurerm_subnet.juice_shop_subnet.id
-    private_ip_address_allocation = "Static"
-    private_ip_address            = "10.0.1.4"  # Static private IP for the container
-  }
-}
-
-# Container Group (with no public IP)
-resource "azurerm_container_group" "juice_shop_container" {
-  name                = "juice-shop-container"
-  location            = azurerm_resource_group.juice_shop_new_rg.location
-  resource_group_name = azurerm_resource_group.juice_shop_new_rg.name
+resource "azurerm_container_group" "container" {
+  name                = "${var.container_group_name_prefix}-${random_string.container_name.result}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  ip_address_type     = "Public"
   os_type             = "Linux"
-  tags                = {
-    environment = "production"
-  }
+  restart_policy      = var.restart_policy
 
   container {
-    name   = "juice-shop"
-    image  = "bkimminich/juice-shop:v15.0.0"
-    cpu    = "1"
-    memory = "2"
-    environment_variables = {
-      NODE_ENV = "production"
-    }
+    name   = "${var.container_name_prefix}-${random_string.container_name.result}"
+    image  = var.image
+    cpu    = var.cpu_cores
+    memory = var.memory_in_gb
 
     ports {
-      port     = 3000
+      port     = var.port
       protocol = "TCP"
     }
   }
-
-  # Ensure the container group is associated with the private subnet only
-  subnet_ids = [azurerm_subnet.juice_shop_subnet.id]
 }
 
-output "resource_group_name" {
-  value = azurerm_resource_group.juice_shop_new_rg.name
+variable "resource_group_location" {
+  type        = string
+  default     = "eastus"
+  description = "Location for all resources."
 }
 
-output "container_group_name" {
-  value = azurerm_container_group.juice_shop_container.name
+variable "resource_group_name_prefix" {
+  type        = string
+  default     = "rg"
+  description = "Prefix of the resource group name that's combined with a random value so name is unique in your Azure subscription."
 }
+
+variable "container_group_name_prefix" {
+  type        = string
+  description = "Prefix of the container group name that's combined with a random value so name is unique in your Azure subscription."
+  default     = "acigroup"
+}
+
+variable "container_name_prefix" {
+  type        = string
+  description = "Prefix of the container name that's combined with a random value so name is unique in your Azure subscription."
+  default     = "aci"
+}
+
+variable "image" {
+  type        = string
+  description = "Container image to deploy. Should be of the form repoName/imagename:tag for images stored in public Docker Hub, or a fully qualified URI for other registries. Images from private registries require additional registry credentials."
+  default     = "mcr.microsoft.com/azuredocs/aci-helloworld"
+}
+
+variable "port" {
+  type        = number
+  description = "Port to open on the container and the public IP address."
+  default     = 80
+}
+
+variable "cpu_cores" {
+  type        = number
+  description = "The number of CPU cores to allocate to the container."
+  default     = 1
+}
+
+variable "memory_in_gb" {
+  type        = number
+  description = "The amount of memory to allocate to the container in gigabytes."
+  default     = 2
+}
+
+variable "restart_policy" {
+  type        = string
+  description = "The behavior of Azure runtime if container has stopped."
+  default     = "Always"
+  validation {
+    condition     = contains(["Always", "Never", "OnFailure"], var.restart_policy)
+    error_message = "The restart_policy must be one of the following: Always, Never, OnFailure."
+  }
+}
+
+output "container_ipv4_address" {
+  value = azurerm_container_group.container.ip_address
+}
+
