@@ -44,11 +44,28 @@ jobs:
           TF_VAR_client_secret: ${{ secrets.ARM_CLIENT_SECRET }}
         run: terraform plan
 
-      # Terraform Apply
-      - name: Terraform Apply
+      # Ask whether to apply or destroy
+      - name: Ask Terraform Action (apply or destroy)
+        id: ask_action
+        run: |
+          echo "Please choose an action:"
+          echo "Enter 'apply' to apply the Terraform plan or 'destroy' to destroy the resources"
+          read action_choice
+          echo "::set-output name=action_choice::$action_choice"
+
+      # Terraform Apply or Destroy based on input
+      - name: Terraform Action
         env:
           TF_VAR_subscription_id: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           TF_VAR_tenant_id: ${{ secrets.ARM_TENANT_ID }}
           TF_VAR_client_id: ${{ secrets.ARM_CLIENT_ID }}
           TF_VAR_client_secret: ${{ secrets.ARM_CLIENT_SECRET }}
-        run: terraform destroy --auto-approve
+        run: |
+          if [[ "${{ steps.ask_action.outputs.action_choice }}" == "apply" ]]; then
+            terraform apply --auto-approve
+          elif [[ "${{ steps.ask_action.outputs.action_choice }}" == "destroy" ]]; then
+            terraform destroy --auto-approve
+          else
+            echo "Invalid action choice. Please enter 'apply' or 'destroy'."
+            exit 1
+          fi
