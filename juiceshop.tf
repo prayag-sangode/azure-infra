@@ -1,19 +1,20 @@
-resource "random_pet" "rg_name" {
-  prefix = var.resource_group_name_prefix
+# Create a Virtual Network
+resource "azurerm_virtual_network" "vnet" {
+  name                = "vnet-${random_pet.rg_name.id}"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  address_space       = ["10.0.0.0/16"]
 }
 
-resource "azurerm_resource_group" "rg" {
-  name     = random_pet.rg_name.id
-  location = var.resource_group_location
+# Create a Subnet
+resource "azurerm_subnet" "subnet" {
+  name                 = "subnet-${random_pet.rg_name.id}"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.vnet.name
+  address_prefixes     = ["10.0.1.0/24"]
 }
 
-resource "random_string" "container_name" {
-  length  = 25
-  lower   = true
-  upper   = false
-  special = false
-}
-
+# Updated Container Group
 resource "azurerm_container_group" "container" {
   name                = "${var.container_group_name_prefix}-${random_string.container_name.result}"
   location            = azurerm_resource_group.rg.location
@@ -21,6 +22,8 @@ resource "azurerm_container_group" "container" {
   ip_address_type     = "Private"
   os_type             = "Linux"
   restart_policy      = var.restart_policy
+
+  subnet_ids = [azurerm_subnet.subnet.id] # Assign the subnet to the container group
 
   container {
     name   = "${var.container_name_prefix}-${random_string.container_name.result}"
@@ -35,65 +38,6 @@ resource "azurerm_container_group" "container" {
   }
 }
 
-variable "resource_group_location" {
-  type        = string
-  default     = "eastus"
-  description = "Location for all resources."
-}
-
-variable "resource_group_name_prefix" {
-  type        = string
-  default     = "rg"
-  description = "Prefix of the resource group name that's combined with a random value so name is unique in your Azure subscription."
-}
-
-variable "container_group_name_prefix" {
-  type        = string
-  description = "Prefix of the container group name that's combined with a random value so name is unique in your Azure subscription."
-  default     = "acigroup"
-}
-
-variable "container_name_prefix" {
-  type        = string
-  description = "Prefix of the container name that's combined with a random value so name is unique in your Azure subscription."
-  default     = "aci"
-}
-
-variable "image" {
-  type        = string
-  description = "Container image to deploy. Should be of the form repoName/imagename:tag for images stored in public Docker Hub, or a fully qualified URI for other registries. Images from private registries require additional registry credentials."
-  default     = "mcr.microsoft.com/azuredocs/aci-helloworld"
-}
-
-variable "port" {
-  type        = number
-  description = "Port to open on the container and the public IP address."
-  default     = 80
-}
-
-variable "cpu_cores" {
-  type        = number
-  description = "The number of CPU cores to allocate to the container."
-  default     = 1
-}
-
-variable "memory_in_gb" {
-  type        = number
-  description = "The amount of memory to allocate to the container in gigabytes."
-  default     = 2
-}
-
-variable "restart_policy" {
-  type        = string
-  description = "The behavior of Azure runtime if container has stopped."
-  default     = "Always"
-  validation {
-    condition     = contains(["Always", "Never", "OnFailure"], var.restart_policy)
-    error_message = "The restart_policy must be one of the following: Always, Never, OnFailure."
-  }
-}
-
 output "container_ipv4_address" {
   value = azurerm_container_group.container.ip_address
 }
-
