@@ -36,11 +36,10 @@ server {
 }
 EOT
     }
-    }
-
-    command = [
-      "sh", "-c",
-      "echo \"$NGINX_CONF\" > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
-    ]
   }
+
+  command = [
+    "sh", "-c",
+    "echo \"$NGINX_CONF\" > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+  ]
 }
