@@ -6,6 +6,7 @@ provider "azurerm" {
   subscription_id = var.subscription_id
   tenant_id       = var.tenant_id
 }
+
 # New Resource Group
 resource "azurerm_resource_group" "juice_shop_new_rg" {
   name     = "juice-shop-new-rg"  # New Resource Group Name
