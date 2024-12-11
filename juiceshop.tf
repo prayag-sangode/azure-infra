@@ -89,7 +89,7 @@ resource "azurerm_container_group" "juice_shop_container" {
     }
   }
 
-  # Subnet to use internal IP
+  # Ensure that no public IP is being used
   subnet_ids = [azurerm_subnet.juice_shop_subnet.id]
 }
 
