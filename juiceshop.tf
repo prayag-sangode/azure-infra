@@ -67,6 +67,11 @@ resource "azurerm_lb" "lb" {
   name                = "juice-shop-lb"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
+
+  frontend_ip_configuration {
+    name                 = "frontend-config"
+    public_ip_address_id = azurerm_public_ip.public_ip.id
+  }
 }
 
 resource "azurerm_lb_backend_address_pool" "backend_pool" {
@@ -88,7 +93,7 @@ resource "azurerm_lb_rule" "http_rule" {
   loadbalancer_id                = azurerm_lb.lb.id
   backend_address_pool_id       = azurerm_lb_backend_address_pool.backend_pool.id
   probe_id                       = azurerm_lb_probe.http_probe.id
-  frontend_ip_configuration_id  = azurerm_lb_frontend_ip_configuration.frontend.id
+  frontend_ip_configuration_id  = azurerm_lb.lb.frontend_ip_configuration[0].id
   frontend_port                  = 443
   backend_port                   = 443
   enable_tcp_reset               = true
@@ -129,12 +134,6 @@ resource "azurerm_public_ip" "public_ip" {
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Static"
   sku                 = "Basic"
-}
-
-resource "azurerm_lb_frontend_ip_configuration" "frontend" {
-  name                          = "frontend-config"
-  loadbalancer_id               = azurerm_lb.lb.id
-  public_ip_address_id          = azurerm_public_ip.public_ip.id
 }
 
 output "public_ip_address" {
