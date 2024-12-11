@@ -19,6 +19,15 @@ resource "azurerm_subnet" "subnet" {
   resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = ["10.0.1.0/24"]
+  delegation {
+    name = "aci-delegation"
+    service_delegation {
+      name = "Microsoft.ContainerInstance/containerGroups"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/action",
+      ]
+    }
+  }
 }
 
 resource "random_string" "container_name" {
@@ -34,10 +43,7 @@ resource "azurerm_container_group" "container" {
   resource_group_name = azurerm_resource_group.rg.name
   os_type             = "Linux"
   restart_policy      = var.restart_policy
-
-  network_profile {
-    id = azurerm_subnet.subnet.id
-  }
+  subnet_ids          = [azurerm_subnet.subnet.id] # Use the subnet ID directly here
 
   container {
     name   = "${var.container_name_prefix}-${random_string.container_name.result}"
