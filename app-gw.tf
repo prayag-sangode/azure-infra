@@ -1,19 +1,3 @@
-# Application Gateway Subnet
-resource "azurerm_subnet" "appgw_subnet" {
-  name                 = "appgw-subnet-${random_pet.rg_name.id}"
-  resource_group_name  = azurerm_resource_group.rg.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.0.2.0/24"] # Ensure it doesn't overlap with other subnets
-}
-
-# Public IP for Application Gateway
-resource "azurerm_public_ip" "appgw_pip" {
-  name                = "appgw-pip-${random_pet.rg_name.id}"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-  allocation_method   = "Dynamic"
-}
-
 # Application Gateway
 resource "azurerm_application_gateway" "appgw" {
   name                = "appgw-${random_pet.rg_name.id}"
@@ -43,6 +27,11 @@ resource "azurerm_application_gateway" "appgw" {
 
   backend_address_pool {
     name = "aci-backend-pool"
+
+    # Use ACI's private IP here
+    backend_addresses {
+      ip_address = azurerm_container_group.container.ip_address
+    }
   }
 
   backend_http_settings {
@@ -71,20 +60,4 @@ resource "azurerm_application_gateway" "appgw" {
   tags = {
     Environment = "Dev"
   }
-}
-
-# Add ACI to Backend Pool
-resource "azurerm_application_gateway_backend_address_pool" "aci_backend" {
-  name                = "aci-backend"
-  application_gateway_id = azurerm_application_gateway.appgw.id
-
-  backend_addresses {
-    ip_address = azurerm_container_group.container.ip_address
-  }
-}
-
-# Output for Public IP of Application Gateway
-output "appgw_public_ip" {
-  value = azurerm_public_ip.appgw_pip.ip_address
-  description = "Public IP address of the Application Gateway"
 }
