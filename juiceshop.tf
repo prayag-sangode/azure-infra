@@ -61,6 +61,103 @@ resource "azurerm_container_group" "container" {
   }
 }
 
+# Public IP for Application Gateway
+resource "azurerm_public_ip" "my_public_ip" {
+  name                = "my-public-ip"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Static"
+  sku                  = "Standard"
+}
+
+# Application Gateway Backend Pool
+resource "azurerm_application_gateway_backend_address_pool" "backend_pool" {
+  name                     = "backend-pool"
+  resource_group_name      = azurerm_resource_group.rg.name
+  application_gateway_name = azurerm_application_gateway.app_gateway.name
+
+  backend_addresses {
+    ip_address = output.container_ipv4_address.value
+  }
+}
+
+# Application Gateway HTTP Settings
+resource "azurerm_application_gateway_http_settings" "http_settings" {
+  name                     = "http-settings"
+  resource_group_name      = azurerm_resource_group.rg.name
+  application_gateway_name = azurerm_application_gateway.app_gateway.name
+
+  port                     = 80
+  protocol                 = "Http"
+  cookie_based_affinity    = "Disabled"
+
+  request_timeout {
+    seconds = 20
+  }
+}
+
+# Application Gateway
+resource "azurerm_application_gateway" "app_gateway" {
+  name                = "myAppGateway"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  sku {
+    name     = "Standard_v2"
+    tier     = "Standard_v2"
+    capacity = 2
+  }
+
+  frontend_ip_configuration {
+    name                      = "frontend-config"
+    public_ip_address_id      = azurerm_public_ip.my_public_ip.id
+  }
+
+  backend_address_pool {
+    name                       = "backend-pool"
+    backend_addresses {
+      ip_address = output.container_ipv4_address.value
+    }
+  }
+
+  http_settings {
+    name                           = "http-settings"
+    port                           = 80
+    protocol                       = "Http"
+    cookie_based_affinity          = "Disabled"
+    request_timeout {
+      seconds = 20
+    }
+  }
+
+  listener {
+    name                                 = "app-gateway-listener"
+    frontend_ip_configuration_id        = azurerm_application_gateway_frontend_ip_configuration.my_frontend_ip.id
+    frontend_port_id                    = azurerm_application_gateway_frontend_port.my_frontend_port.id
+    protocol                             = "Http"
+    ssl_certificate_id                  = null
+  }
+
+  gateway_ip_configuration {
+    name                 = "app-gateway-vnet"
+    subnet_id            = azurerm_subnet.subnet.id
+  }
+
+  url_path_map {
+    default_backend_address_pool_id = azurerm_application_gateway_backend_address_pool.backend_pool.id
+    default_backend_http_settings_id = azurerm_application_gateway_http_settings.http_settings.id
+    default_backend_address_pool {
+      backend_addresses {
+        ip_address = output.container_ipv4_address.value
+      }
+    }
+  }
+}
+
+# Outputs
+output "container_ipv4_address" {
+  value = azurerm_container_group.container.ip_address
+}
+
 # Variables
 variable "resource_group_location" {
   type        = string
@@ -89,8 +186,7 @@ variable "container_name_prefix" {
 variable "image" {
   type        = string
   default     = "mcr.microsoft.com/azuredocs/aci-helloworld" 
-  #default     = "bkimminich/juice-shop:latest"
-  description = "Container image to deploy. Should be of the form repoName/imagename:tag for images stored in public Docker Hub, or a fully qualified URI for other registries. Images from private registries require additional registry credentials."
+  description = "Container image to deploy."
 }
 
 variable "port" {
@@ -119,9 +215,4 @@ variable "restart_policy" {
     condition     = contains(["Always", "Never", "OnFailure"], var.restart_policy)
     error_message = "The restart_policy must be one of the following: Always, Never, OnFailure."
   }
-}
-
-# Outputs
-output "container_ipv4_address" {
-  value = azurerm_container_group.container.ip_address
 }
