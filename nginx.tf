@@ -18,8 +18,18 @@ resource "azurerm_container_group" "nginx_proxy" {
       protocol = "TCP"
     }
 
-    environment_variables = {
-      NGINX_CONF = <<EOT
+    volume_mount {
+      name      = "nginx-config"
+      mount_path = "/etc/nginx/conf.d"
+    }
+  }
+
+  volume {
+    name = "nginx-config"
+
+    content {
+      path     = "default.conf"
+      content  = <<EOT
 server {
     listen 443 ssl;
     server_name _;
@@ -37,9 +47,4 @@ server {
 EOT
     }
   }
-
-  command = [
-    "sh", "-c",
-    "echo \"$NGINX_CONF\" > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
-  ]
 }
