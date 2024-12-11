@@ -1,3 +1,4 @@
+# Application Gateway Resource
 resource "azurerm_application_gateway" "app_gateway" {
   name                = "myAppGateway"
   location            = azurerm_resource_group.rg.location
@@ -7,15 +8,16 @@ resource "azurerm_application_gateway" "app_gateway" {
     tier     = "Standard_v2"
     capacity = 2
   }
+
   frontend_ip_configuration {
-    name                 = "frontend-config"
-    public_ip_address_id = azurerm_public_ip.my_public_ip.id
+    name                      = "frontend-config"
+    public_ip_address_id      = azurerm_public_ip.my_public_ip.id  # Define your public IP resource
   }
 
   backend_address_pool {
     name = "backend-pool"
     backend_addresses {
-      ip_address = output.container_ipv4_address.value # Using the output here
+      ip_address = output.container_ipv4_address.value  # Reference the output here
     }
   }
 
@@ -47,9 +49,8 @@ resource "azurerm_application_gateway" "app_gateway" {
     default_backend_http_settings_id = azurerm_application_gateway_http_settings.http_settings.id
     default_backend_address_pool {
       backend_addresses {
-        ip_address = output.container_ipv4_address.value
+        ip_address = output.container_ipv4_address.value  # Use the container IP here
       }
     }
   }
 }
-
