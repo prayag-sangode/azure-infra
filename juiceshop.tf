@@ -53,9 +53,13 @@ resource "azurerm_container_group" "juice_shop_container" {
     image  = "bkimminich/juice-shop:v15.0.0"
     cpu    = "1"
     memory = "2"
-    ports  = ["3000"]
     environment_variables = {
       NODE_ENV = "production"
+    }
+
+    ports {
+      port     = 3000
+      protocol = "TCP"
     }
   }
 
