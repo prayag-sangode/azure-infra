@@ -119,11 +119,6 @@ resource "azurerm_application_gateway" "app_gateway" {
   url_path_map {
     default_backend_address_pool_id = azurerm_application_gateway_backend_address_pool.backend_pool.id
     default_backend_http_settings_id = azurerm_application_gateway_http_settings.http_settings.id
-    default_backend_address_pool {
-      backend_addresses {
-        ip_address = output.container_ipv4_address.value
-      }
-    }
   }
 }
 
