@@ -70,32 +70,6 @@ resource "azurerm_public_ip" "my_public_ip" {
   sku                  = "Standard"
 }
 
-# Application Gateway Backend Pool
-resource "azurerm_application_gateway_backend_address_pool" "backend_pool" {
-  name                     = "backend-pool"
-  resource_group_name      = azurerm_resource_group.rg.name
-  application_gateway_name = azurerm_application_gateway.app_gateway.name
-
-  backend_addresses {
-    ip_address = output.container_ipv4_address.value
-  }
-}
-
-# Application Gateway HTTP Settings
-resource "azurerm_application_gateway_http_settings" "http_settings" {
-  name                     = "http-settings"
-  resource_group_name      = azurerm_resource_group.rg.name
-  application_gateway_name = azurerm_application_gateway.app_gateway.name
-
-  port                     = 80
-  protocol                 = "Http"
-  cookie_based_affinity    = "Disabled"
-
-  request_timeout {
-    seconds = 20
-  }
-}
-
 # Application Gateway
 resource "azurerm_application_gateway" "app_gateway" {
   name                = "myAppGateway"
