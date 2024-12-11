@@ -7,30 +7,9 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
-# Declare input variables for Azure authentication
-variable "client_id" {
-  description = "Azure Client ID"
-  type        = string
-}
-
-variable "client_secret" {
-  description = "Azure Client Secret"
-  type        = string
-}
-
-variable "subscription_id" {
-  description = "Azure Subscription ID"
-  type        = string
-}
-
-variable "tenant_id" {
-  description = "Azure Tenant ID"
-  type        = string
-}
-
 # New Resource Group
 resource "azurerm_resource_group" "juice_shop_new_rg" {
-  name     = "juice-shop-neww-rg"  # New Resource Group Name
+  name     = "juice-shop-new-rg"  # New Resource Group Name
   location = "East US"            # Location for the resource group
 }
 
@@ -89,7 +68,7 @@ resource "azurerm_container_group" "juice_shop_container" {
     }
   }
 
-  # Ensure that no public IP is being used
+  # Ensure the container group is associated with the private subnet only
   subnet_ids = [azurerm_subnet.juice_shop_subnet.id]
 }
 
