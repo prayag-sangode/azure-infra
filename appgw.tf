@@ -1,4 +1,3 @@
-# Application Gateway Resource
 resource "azurerm_application_gateway" "app_gateway" {
   name                = "myAppGateway"
   location            = azurerm_resource_group.rg.location
@@ -17,7 +16,7 @@ resource "azurerm_application_gateway" "app_gateway" {
   backend_address_pool {
     name = "backend-pool"
     backend_addresses {
-      ip_address = output.container_ipv4_address.value  # Reference the container's IP here
+      ip_address = output.container_ipv4_address.value
     }
   }
 
