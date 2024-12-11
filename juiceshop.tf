@@ -50,7 +50,7 @@ resource "azurerm_container_group" "container" {
 
   container {
     name   = "${var.container_name_prefix}-${random_string.container_name.result}"
-    image  = var.image
+    image  = "bkimminich/juice-shop"  # Use the Juice Shop Docker image
     cpu    = var.cpu_cores
     memory = var.memory_in_gb
 
@@ -86,16 +86,15 @@ variable "container_name_prefix" {
   description = "Prefix of the container name that's combined with a random value so name is unique in your Azure subscription."
 }
 
-# Update the container image to use Juiceshop
 variable "image" {
   type        = string
-  default     = "bkimminich/juice-shop"  # Updated image for Juiceshop
+  default     = "bkimminich/juice-shop"  # Use the Juice Shop image from Docker Hub
   description = "Container image to deploy. Should be of the form repoName/imagename:tag for images stored in public Docker Hub, or a fully qualified URI for other registries. Images from private registries require additional registry credentials."
 }
 
 variable "port" {
   type        = number
-  default     = 80
+  default     = 3000  # Default port for Juice Shop
   description = "Port to open on the container."
 }
 
