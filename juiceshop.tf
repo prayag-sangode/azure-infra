@@ -29,13 +29,12 @@ resource "azurerm_network_interface" "juice_shop_nic" {
   name                = "juice-shop-nic"
   location            = azurerm_resource_group.juice_shop_rg.location
   resource_group_name = azurerm_resource_group.juice_shop_rg.name
-  private_ip_address  = "10.0.0.4"
-  private_ip_address_allocation = "Static"
-  
+
   ip_configuration {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.juice_shop_subnet.id
     private_ip_address_allocation = "Static"
+    private_ip_address            = "10.0.0.4"  # Static IP Address
   }
 }
 
@@ -62,4 +61,3 @@ resource "azurerm_container_group" "juice_shop_container" {
 
   network_profile_id = azurerm_network_interface.juice_shop_nic.id
 }
-
