@@ -1,8 +1,10 @@
 provider "azurerm" {
-  subscription_id = var.SUBSCRIPTION_ID
-  client_id       = var.CLIENT_ID
-  client_secret   = var.CLIENT_SECRET
-  tenant_id       = var.TENANT_ID
+  features {}
+
+  client_id       = var.client_id
+  client_secret   = var.client_secret
+  subscription_id = var.subscription_id
+  tenant_id       = var.tenant_id
 }
 
 # New Resource Group
