@@ -50,7 +50,7 @@ resource "azurerm_container_group" "container" {
 
   container {
     name   = "${var.container_name_prefix}-${random_string.container_name.result}"
-    image  = "bkimminich/juice-shop"  # Use the Juice Shop Docker image
+    image  = var.image
     cpu    = var.cpu_cores
     memory = var.memory_in_gb
 
@@ -88,13 +88,13 @@ variable "container_name_prefix" {
 
 variable "image" {
   type        = string
-  default     = "bkimminich/juice-shop"  # Use the Juice Shop image from Docker Hub
-  description = "Container image to deploy. Should be of the form repoName/imagename:tag for images stored in public Docker Hub, or a fully qualified URI for other registries. Images from private registries require additional registry credentials."
+  default     = "nginx"  # Using the NGINX public image
+  description = "Container image to deploy."
 }
 
 variable "port" {
   type        = number
-  default     = 3000  # Default port for Juice Shop
+  default     = 80
   description = "Port to open on the container."
 }
 
