@@ -7,6 +7,15 @@ provider "azurerm" {
   tenant_id       = var.tenant_id
 }
 
+terraform {
+  backend "azurerm" {
+    resource_group_name   = "juiceshop-rg"             # Replace if needed
+    storage_account_name  = "juiceshopstorage"         # Matches var.storage_account_name
+    container_name        = "terraform-state"          # Matches var.storage_container_name
+    key                   = "terraform.tfstate"        # State file name
+  }
+}
+
 # Declare input variables for Azure authentication
 variable "client_id" {
   description = "Azure Client ID"
