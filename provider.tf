@@ -8,14 +8,14 @@ provider "azurerm" {
   use_msi         = false # Explicitly disable MSI to use the provided credentials
 }
 
-terraform {
-  backend "azurerm" {
-    resource_group_name   = "juiceshop-rg"             # Replace if needed
-    storage_account_name  = "juiceshopstorage"         # Matches var.storage_account_name
-    container_name        = "terraform-state"          # Matches var.storage_container_name
-    key                   = "terraform.tfstate"        # State file name
-  }
-}
+#terraform {
+#  backend "azurerm" {
+#    resource_group_name   = "juiceshop-rg"             # Replace if needed
+#    storage_account_name  = "juiceshopstorage"         # Matches var.storage_account_name
+#    container_name        = "terraform-state"          # Matches var.storage_container_name
+#    key                   = "terraform.tfstate"        # State file name
+#  }
+#}
 
 # Input Variables for Azure Authentication
 variable "client_id" {
