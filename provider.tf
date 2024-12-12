@@ -5,6 +5,7 @@ provider "azurerm" {
   client_secret   = var.client_secret
   subscription_id = var.subscription_id
   tenant_id       = var.tenant_id
+  use_msi         = false # Explicitly disable MSI to use the provided credentials
 }
 
 terraform {
@@ -16,7 +17,7 @@ terraform {
   }
 }
 
-# Declare input variables for Azure authentication
+# Input Variables for Azure Authentication
 variable "client_id" {
   description = "Azure Client ID"
   type        = string
