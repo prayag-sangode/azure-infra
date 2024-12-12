@@ -64,7 +64,7 @@ resource "azurerm_container_group" "container" {
 # Variables
 variable "resource_group_location" {
   type        = string
-  default     = "eastus"
+  default     = "westus"
   description = "Location for all resources."
 }
 
