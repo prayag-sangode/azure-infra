@@ -3,10 +3,10 @@ name: Terraform Deployment
 on:
   push:
     branches:
-      - main
+      - main-donot-run
   pull_request:
     branches:
-      - main
+      - main-donot-run
 
 jobs:
   terraform:
