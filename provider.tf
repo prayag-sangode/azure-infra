@@ -8,6 +8,12 @@ provider "azurerm" {
   use_msi         = false # Explicitly disable MSI to use the provided credentials
 }
 
+resource "azurerm_resource_group" "rg" {
+  name     = "juiceshop-rg"
+  location = "westus" # Replace with your preferred Azure region
+}
+
+
 #terraform {
 #  backend "azurerm" {
 #    resource_group_name   = "juiceshop-rg"             # Replace if needed
